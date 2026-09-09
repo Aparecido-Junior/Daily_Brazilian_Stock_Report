@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+# Global pipeline settings.
+#
+# GOVERNANCE NOTE: keeping settings in a config file (not hardcoded in Python)
+# is a core pipeline principle. It lets us change behaviour — where data lands,
+# which market we track, how far back we pull — without editing code, and it
+# gives us a single auditable place for "how the pipeline is configured".
+# ---------------------------------------------------------------------------
+
+project:
+  name: "Daily Brazilian Stock Report"
+  market: "B3"              # Brazilian stock exchange
+  timezone: "America/Sao_Paulo"
+
+# Where each storage layer lives on disk (Stage 3 will use these).
+paths:
+  raw: "data/raw"           # Data lake  — immutable raw copies, as pulled
+  warehouse: "data/warehouse"  # Warehouse — curated, query-ready tables
+  reports: "data/reports"   # Stage 6 outputs
+
+# How much history each daily run pulls (Stage 2).
+ingestion:
+  lookback_days: 400        # ~18 months, enough for 200-day moving averages

@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# The "universe": the set of instruments the pipeline tracks.
+#
+# This IS a data source — a file-based one. In pipeline terms, a source isn't
+# only an API; a curated list like this is a source too. We keep the ticker,
+# a human-friendly name, and the sector (used later for Stage 4 aggregation).
+#
+# B3 tickers use the ".SA" (São Paulo) suffix on Yahoo Finance, e.g. PETR4.SA.
+# ---------------------------------------------------------------------------
+
+# The market index itself — our benchmark.
+benchmark:
+  ticker: "^BVSP"
+  name: "Ibovespa"
+
+# Starter universe: a handful of the most liquid Ibovespa names.
+# We keep it small while learning; scaling this list up is trivial later.
+stocks:
+  - ticker: "PETR4.SA"
+    name: "Petrobras PN"
+    sector: "Energy"
+  - ticker: "VALE3.SA"
+    name: "Vale ON"
+    sector: "Materials"
+  - ticker: "ITUB4.SA"
+    name: "Itaú Unibanco PN"
+    sector: "Financials"
+  - ticker: "BBDC4.SA"
+    name: "Bradesco PN"
+    sector: "Financials"
+  - ticker: "ABEV3.SA"
+    name: "Ambev ON"
+    sector: "Consumer Staples"
+  - ticker: "B3SA3.SA"
+    name: "B3 ON"
+    sector: "Financials"
+  - ticker: "WEGE3.SA"
+    name: "WEG ON"
+    sector: "Industrials"
+  - ticker: "MGLU3.SA"
+    name: "Magazine Luiza ON"
+    sector: "Consumer Discretionary"

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Data artifacts (the lake/warehouse/outputs are generated, not source)
+data/raw/*
+data/warehouse/*
+data/reports/*
+!data/raw/.gitkeep
+!data/warehouse/.gitkeep
+!data/reports/.gitkeep
+
+# Secrets
+.env

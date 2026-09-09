@@ -1,0 +1,13 @@
+# Core pipeline dependencies (added stage by stage as we need them)
+
+# Config
+PyYAML>=6.0
+
+# Stage 2 (Ingestion) + Stage 4 (Processing) — added now so the env is stable
+yfinance>=0.2.40      # Yahoo Finance data source (B3 tickers use the .SA suffix)
+pandas>=2.0           # tabular data handling
+
+# Stage 3 (Storage)
+duckdb>=1.0           # lightweight analytical warehouse (SQL over parquet)
+
+# (later stages will add: matplotlib/plotly for charts, jinja2 for report templating)
