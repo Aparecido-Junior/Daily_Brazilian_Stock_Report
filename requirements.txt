@@ -2,12 +2,29 @@
 
 # Config
 PyYAML>=6.0
+python-dotenv>=1.0     # loads .env locally; in CI/prod DATABASE_URL is a real env var / secret
 
-# Stage 2 (Ingestion) + Stage 4 (Processing) — added now so the env is stable
+# Stage 2 (Ingestion)
 yfinance>=0.2.40      # Yahoo Finance data source (B3 tickers use the .SA suffix)
 pandas>=2.0           # tabular data handling
 
-# Stage 3 (Storage)
-duckdb>=1.0           # lightweight analytical warehouse (SQL over parquet)
+# Stage 3 (Storage) — a real hosted Postgres warehouse (Neon/Supabase), not a local file
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
 
-# (later stages will add: matplotlib/plotly for charts, jinja2 for report templating)
+# Stage 4 (Serving / API)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+
+# Client-side (notebook) — talks to the API, never to the database directly
+requests>=2.31
+matplotlib>=3.8
+
+# Tests
+pytest>=8.0
+httpx>=0.27           # required by fastapi.testclient.TestClient
+
+# Dev tooling (not needed to run the pipeline — only to regenerate notebooks/explore.ipynb)
+nbformat>=5.10
+
+# (later stages will add: jinja2 for report templating)

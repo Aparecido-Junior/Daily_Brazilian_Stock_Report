@@ -6,6 +6,9 @@ venv/
 *.egg-info/
 .pytest_cache/
 
+# Jupyter
+.ipynb_checkpoints/
+
 # Data artifacts (the lake/warehouse/outputs are generated, not source)
 data/raw/*
 data/warehouse/*
