@@ -15,7 +15,18 @@ Run automatically:  the last step of .github/workflows/daily_pipeline.yml,
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+# Running this file directly (`python scripts/generate_report_images.py`, from
+# the repo root or anywhere else) puts only this file's own directory
+# (scripts/) on sys.path — not the repo root, so the `stockpipe` package next
+# to it wouldn't otherwise be importable. `python -m` doesn't need this, but
+# plain `python scripts/generate_report_images.py` (this script's own
+# documented, and CI's, invocation) does.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 import matplotlib
 matplotlib.use("Agg")  # no display available in CI or most terminals
@@ -25,7 +36,7 @@ import pandas as pd
 from stockpipe.analytics import queries as analytics
 from stockpipe.storage import db
 
-OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "assets"
+OUT_DIR = REPO_ROOT / "docs" / "assets"
 
 # One consistent palette across all three charts, so the same ticker always
 # gets the same color if you look at more than one image side by side.
