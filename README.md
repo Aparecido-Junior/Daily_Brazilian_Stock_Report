@@ -23,9 +23,34 @@ code you can execute to *see* the stage work.
 | 2. Ingestion | ✅ built | [docs/02_ingestion.md](docs/02_ingestion.md) |
 | 3. Storage | ✅ built | [docs/03_storage.md](docs/03_storage.md) |
 | 4. Serving (API) | ✅ built | [docs/04_api.md](docs/04_api.md) |
-| 5. Analytics | ⬜ next | — |
-| 6. Visualization & Insights | ⬜ (notebook is a first taste) | — |
+| 5. Analytics | ✅ built | [docs/05_analytics.md](docs/05_analytics.md) |
+| 6. Visualization & Insights | ✅ built | [docs/06_visualization.md](docs/06_visualization.md) |
 | ⟳ Monitor / Govern | ⬜ (woven throughout) | — |
+
+## The analysis, at a glance
+
+These charts are generated straight from the live warehouse by
+[`scripts/generate_report_images.py`](scripts/generate_report_images.py), and
+refreshed automatically every trading day by the same GitHub Actions
+workflow that runs the pipeline (see [docs/06_visualization.md](docs/06_visualization.md)) —
+so what you're looking at is never more than a day stale, and you don't need
+to run any code yourself to see the analysis.
+
+**Which of these would you rather have owned** — every tracked stock's
+cumulative return since its first date on record, rebased to 0%, against the
+Ibovespa (dashed):
+
+![Cumulative returns vs. Ibovespa](docs/assets/cumulative_returns.png)
+
+**Leaderboard** — every tracked stock's latest performance relative to the
+Ibovespa benchmark, best to worst:
+
+![Leaderboard vs. Ibovespa](docs/assets/leaderboard.png)
+
+**Correlation** — how closely each stock's daily moves track every other
+stock's:
+
+![Daily-return correlation heatmap](docs/assets/correlation_heatmap.png)
 
 ## Tech choices (all swappable — that's the point of the layered design)
 
@@ -48,11 +73,16 @@ stockpipe/        # the pipeline package
   ingestion/       #   Stage 2: fetch + tidy (yfinance)
   storage/        #   Stage 3: Postgres warehouse (upserts)
   api/            #   Stage 4: FastAPI serving layer
+  analytics/      #   Stage 5: returns, moving averages, volatility, vs.-benchmark queries
   run_daily.py    #   thin entrypoint: Stage 2 -> Stage 3, run by the scheduler
+scripts/
+  generate_report_images.py  # Stage 6: builds docs/assets/*.png embedded above
+  build_notebook.py          # regenerates notebooks/explore.ipynb from source
 docs/             # one learning note per stage
-notebooks/        # Stage 6 preview: a client that calls the API
+  assets/         # Stage 6 chart images, embedded in this README
+notebooks/        # Stage 6: a notebook client that calls the API and plots it
 .github/workflows/
-  daily_pipeline.yml   # the actual daily scheduler (cron, GitHub Actions)
+  daily_pipeline.yml   # the actual daily scheduler (cron, GitHub Actions) + chart refresh
   tests.yml            # runs the test suite on every push
 data/             # legacy local-cache dirs, unused now that storage is Postgres
 tests/
@@ -72,15 +102,20 @@ python -m stockpipe.storage.db         # Stage 3 (also creates the prices table)
 python -m stockpipe.run_daily          # Stage 2 -> 3 together, what the scheduler runs
 
 uvicorn stockpipe.api.main:app --reload   # Stage 4 — then open http://127.0.0.1:8000/docs
+                                           #   Stage 5 adds /analytics/* endpoints to the same app
 
-pytest tests/ -v                          # everything except the live-DB test runs with no setup
+python scripts/generate_report_images.py  # Stage 6 — (re)builds docs/assets/*.png from the warehouse
+jupyter notebook notebooks/explore.ipynb  # Stage 6 — the interactive version (needs the API running)
+
+pytest tests/ -v                          # everything except the live-DB tests runs with no setup
 ```
 
 ### Running it on a schedule (production)
 
-`.github/workflows/daily_pipeline.yml` runs `stockpipe.run_daily` automatically
-every weekday shortly after the B3 close. One-time setup: add your database
-connection string as a repository secret named `DATABASE_URL`
-(**Settings → Secrets and variables → Actions → New repository secret**) —
-GitHub's servers have full internet access, so this runs without your laptop
-needing to be on.
+`.github/workflows/daily_pipeline.yml` runs `stockpipe.run_daily` and then
+`scripts/generate_report_images.py` automatically every weekday shortly after
+the B3 close, committing any refreshed charts straight back to the repo. One-time
+setup: add your database connection string as a repository secret named
+`DATABASE_URL` (**Settings → Secrets and variables → Actions → New repository
+secret**) — GitHub's servers have full internet access, so this runs without
+your laptop needing to be on.

@@ -24,6 +24,7 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from stockpipe import config
+from stockpipe.analytics import queries as analytics
 from stockpipe.sources import registry
 from stockpipe.storage import db
 
@@ -93,3 +94,49 @@ def latest_report() -> dict:
             "close": float(row["close"]) if row["close"] is not None else None,
         })
     return {"as_of": config.settings()["project"]["timezone"], "rows": out}
+
+
+# --- Stage 5 (Analytics) endpoints -----------------------------------------
+# Same rule as everything else in this file: these compute from the
+# warehouse on request rather than reading from any new stored table.
+
+
+@app.get("/analytics/prices/{ticker}")
+def analytics_prices(ticker: str, limit: int = Query(default=400, le=2000)) -> list[dict]:
+    """Daily return, 20/50/200-day moving averages, and rolling volatility."""
+    df = analytics.price_analytics(ticker=ticker, limit=limit)
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"no data for ticker {ticker!r}")
+    return df.to_dict(orient="records")
+
+
+@app.get("/analytics/cumulative-returns")
+def analytics_cumulative_returns(limit_per_ticker: int = Query(default=400, le=2000)) -> list[dict]:
+    """Cumulative return since first date on record, for every tracked symbol.
+
+    Long format (ticker, trade_date, cum_return) — pivot to wide in the
+    client to plot every ticker's line on one overlay chart.
+    """
+    return analytics.all_cumulative_returns(limit_per_ticker=limit_per_ticker).to_dict(orient="records")
+
+
+@app.get("/analytics/daily-returns")
+def analytics_daily_returns(limit_per_ticker: int = Query(default=400, le=2000)) -> list[dict]:
+    """Daily return for every tracked symbol, long format — feeds a correlation matrix."""
+    return analytics.all_daily_returns(limit_per_ticker=limit_per_ticker).to_dict(orient="records")
+
+
+@app.get("/analytics/relative-performance/{ticker}")
+def analytics_relative_performance(ticker: str, benchmark: str = "^BVSP",
+                                    limit: int = Query(default=400, le=2000)) -> list[dict]:
+    """A stock's cumulative return minus the benchmark's, day by day."""
+    df = analytics.relative_performance(ticker, benchmark=benchmark, limit=limit)
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"no data for ticker {ticker!r}")
+    return df.to_dict(orient="records")
+
+
+@app.get("/analytics/leaderboard")
+def analytics_leaderboard(benchmark: str = "^BVSP") -> list[dict]:
+    """Every tracked stock's latest performance vs. the benchmark, ranked best to worst."""
+    return analytics.leaderboard(benchmark=benchmark).to_dict(orient="records")

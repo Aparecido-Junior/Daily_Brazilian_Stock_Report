@@ -5,8 +5,7 @@ name: Tests
 # skip themselves when it's absent (see tests/test_storage.py).
 
 on:
-  push:
-    branches: ["main"]
+  push:  # runs on a push to any branch — this project isn't using "main" yet
   pull_request:
 
 jobs:
